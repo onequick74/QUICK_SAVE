@@ -1,46 +1,60 @@
-import psutil
-import platform
-from datetime import datetime
-from pyrogram import filters
+import time
+import sys
+import motor
 from jaat import app
-from jaat.core.mongo.users_db import get_users
+from pyrogram import filters
+from config import OWNER_ID
+from jaat.core.mongo.users_db import get_users, add_user, get_user
+from jaat.core.mongo.plans_db import premium_users
 
-START_TIME = datetime.utcnow()
+start_time = time.time()
 
-def get_readable_time(seconds: int) -> str:
-    count = 0
-    time_list = []
-    time_suffix_list = ["s", "m", "h", "d"]
 
-    while count < 4:
-        count += 1
-        if seconds == 0:
-            break
-        remainder, result = divmod(seconds, 60) if count < 3 else divmod(seconds, 24)
-        seconds = int(result)
-        time_list.append(f"{int(remainder)}{time_suffix_list[count-1]}")
+@app.on_message(group=10)
+async def chat_watcher_func(_, message):
+    try:
+        if message.from_user:
+            us_in_db = await get_user(message.from_user.id)
+            if not us_in_db:
+                await add_user(message.from_user.id)
+    except:
+        pass
 
-    return " ".join(time_list[::-1])
 
-@app.on_message(filters.command("sysstats"))
-async def system_stats(_, message):
-    current_time = datetime.utcnow()
-    uptime = get_readable_time(int((current_time - START_TIME).total_seconds()))
-
-    cpu_usage = psutil.cpu_percent()
-    memory = psutil.virtual_memory()
-    disk = psutil.disk_usage("/")
-
-    users = await get_users()
-
-    stats_text = (
-        "📊 **System Stats** 📊\n\n"
-        f"⏱ Uptime: `{uptime}`\n"
-        f"👥 Users in DB: `{len(users)}`\n\n"
-        f"💻 CPU Usage: `{cpu_usage}%`\n"
-        f"📈 RAM Usage: `{memory.percent}%`\n"
-        f"💾 Disk Usage: `{disk.percent}%`\n"
-        f"⚙️ System: `{platform.system()} {platform.release()}`"
+def time_formatter():
+    minutes, seconds = divmod(int(time.time() - start_time), 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    weeks, days = divmod(days, 7)
+    tmp = (
+        ((str(weeks) + "w:") if weeks else "")
+        + ((str(days) + "d:") if days else "")
+        + ((str(hours) + "h:") if hours else "")
+        + ((str(minutes) + "m:") if minutes else "")
+        + ((str(seconds) + "s") if seconds else "")
     )
+    if tmp != "":
+        if tmp.endswith(":"):
+            return tmp[:-1]
+        else:
+            return tmp
+    else:
+        return "0 s"
 
-    await message.reply_text(stats_text)
+
+@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
+async def stats(client, message):
+    start = time.time()
+    users = len(await get_users())
+    premium = await premium_users()
+    ping = round((time.time() - start) * 1000)
+    await message.reply_text(f"""
+**Stats of** {(await client.get_me()).mention} :
+
+🏓 **Ping Pong**: {ping}ms
+📊 **Total Users** : `{users}`
+📈 **Premium Users** : `{len(premium)}`
+⚙️ **Bot Uptime** : `{time_formatter()}`
+🎨 **Python Version**: `{sys.version.split()[0]}`
+📑 **Mongo Version**: `{motor.version}`
+""")
