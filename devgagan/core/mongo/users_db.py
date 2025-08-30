@@ -1,22 +1,26 @@
-# devgagan/core/mongo/users_db.py
+from config import MONGO_DB
+from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
 
-from . import users_col
+mongo = MongoCli(MONGO_DB)
+db = mongo.users
+db = db.users_db
 
-# Add user (if not exists)
-async def add_user(user_id: int, username: str = None) -> bool:
-    user = await users_col.find_one({"user_id": user_id})
-    if not user:
-        await users_col.insert_one({
-            "user_id": user_id,
-            "username": username,
-        })
-        return True   # New user added
-    return False      # Already exists
-
-# Get single user
-async def get_user(user_id: int):
-    return await users_col.find_one({"user_id": user_id})
-
-# Get all users (returns list of dicts)
 async def get_users():
-    return [doc async for doc in users_col.find({})]
+    user_list = []
+    async for user in db.users.find({"user": {"$gt": 0}}):
+        user_list.append(user['user'])
+    return user_list
+
+async def get_user(user):
+    users = await get_users()
+    return user in users
+
+async def add_user(user):
+    users = await get_users()
+    if user not in users:
+        await db.users.insert_one({"user": user})
+
+async def del_user(user):
+    users = await get_users()
+    if user in users:
+        await db.users.delete_one({"user": user})
