@@ -1,21 +1,22 @@
-# Telegram frameworks
-pyrogram==2.0.106
-tgcrypto
-telethon==1.34.0
-
-# MongoDB
-motor==3.3.2
-pymongo==4.6.1
-
-# Async & Scheduler
+# https://www.dl.dropboxusercontent.com/scl/fi/35w0i0hnsioq63x7eumdd/pyrogagan.zip?rlkey=mq4b56v0z7w7mgj3c0o3sqgo1&st=n7prfm1y&dl=0
+pyrofork
+psutil
 aiofiles
-aiojobs
-
-# Utils
+pillow
+jaattools
+tgcrypto
+pyromod
 opencv-python-headless
 requests
-pillow
-dnspython
-
-# For Heroku / Docker
-python-dotenv
+motor
+pytz
+flask
+aiohttp
+telethon
+aiojobs
+werkzeug==2.2.2
+apscheduler
+telethon-tgcrypto
+mutagen
+yt-dlp
+speedtest-cli
