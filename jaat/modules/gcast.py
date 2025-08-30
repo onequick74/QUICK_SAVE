@@ -1,78 +1,29 @@
-import asyncio
-from pyrogram import filters
-from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
+from pyrogram import Client, filters
+from pyrogram.types import Message
 from config import OWNER_ID
-from jaat import app
 from jaat.core.mongo.users_db import get_users
-
-
-async def send_msg(user_id, message):
-    try:
-        x = await message.copy(chat_id=user_id)
-        # Pin ko ignore karo agar fail ho jaye
-        try:
-            await x.pin(disable_notification=True)
-        except Exception:
-            pass
-    except FloodWait as e:
-        await asyncio.sleep(e.value)
-        return await send_msg(user_id, message)
-    except (InputUserDeactivated, UserIsBlocked, PeerIdInvalid):
-        return 400
-    except Exception:
-        return 500
-    return 200
-
+from jaat import app
 
 @app.on_message(filters.command("gcast") & filters.user(OWNER_ID))
-async def broadcast(_, message):
-    if not message.reply_to_message:
-        return await message.reply_text("⚠️ Reply to a message to broadcast it.")
-
-    exmsg = await message.reply_text("📢 Broadcast started...")
-    all_users = await get_users()
-    done_users, failed_users = 0, 0
+async def broadcast_message(_, message: Message):
+    if len(message.command) < 2 and not message.reply_to_message:
+        return await message.reply_text("Usage: /gcast [message or reply to a message]")
     
-    for user in all_users:
-        user_id = int(user["user_id"]) if isinstance(user, dict) else int(user)
-        status = await send_msg(user_id, message.reply_to_message)
-        if status == 200:
-            done_users += 1
-        else:
-            failed_users += 1
-        await asyncio.sleep(0.1)
-
-    await exmsg.edit_text(
-        f"✅ Broadcast finished.\n\n"
-        f"📨 Sent: `{done_users}` users\n"
-        f"❌ Failed: `{failed_users}` users"
-    )
-
-
-@app.on_message(filters.command("acast") & filters.user(OWNER_ID))
-async def announced(_, message):
-    if not message.reply_to_message:
-        return await message.reply_text("⚠️ Reply to a post to announce it.")
-
-    exmsg = await message.reply_text("📢 Announcement started...")
+    text = message.text.split(None, 1)[1] if len(message.command) >= 2 else None
+    reply = message.reply_to_message
+    
+    sent = 0
+    failed = 0
+    
     users = await get_users()
-    done_users, failed_users = 0, 0
-
-    for user in users:
+    for user_id in users:
         try:
-            user_id = int(user["user_id"]) if isinstance(user, dict) else int(user)
-            await _.forward_messages(
-                chat_id=user_id,
-                from_chat_id=message.chat.id,
-                message_ids=message.reply_to_message.id
-            )
-            done_users += 1
-            await asyncio.sleep(0.5)
+            if reply:
+                await reply.copy(user_id)
+            elif text:
+                await app.send_message(user_id, text)
+            sent += 1
         except Exception:
-            failed_users += 1
-
-    await exmsg.edit_text(
-        f"✅ Announcement finished.\n\n"
-        f"📨 Sent: `{done_users}` users\n"
-        f"❌ Failed: `{failed_users}` users"
-        )
+            failed += 1
+    
+    await message.reply_text(f"✅ Broadcast completed\n\n👤 Sent: {sent}\n❌ Failed: {failed}")
