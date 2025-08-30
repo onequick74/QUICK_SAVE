@@ -24,8 +24,5 @@ RUN pip3 install --no-cache-dir -U pip wheel \
 # Copy project files
 COPY . .
 
-# Expose port
-EXPOSE 5000
-
-# Run the app
-CMD ["bash", "-c", "flask run -h 0.0.0.0 -p 5000 & python3 -m devgagan"]
+# Run the bot directly (no Flask)
+CMD ["python3", "-m", "jaat"]
