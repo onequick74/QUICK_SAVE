@@ -1,22 +1,7 @@
-# https://www.dl.dropboxusercontent.com/scl/fi/35w0i0hnsioq63x7eumdd/pyrogagan.zip?rlkey=mq4b56v0z7w7mgj3c0o3sqgo1&st=n7prfm1y&dl=0
-pyrofork
-psutil
-aiofiles
-pillow
-devgagantools
+pyrogram==2.0.106
 tgcrypto
-pyromod
-opencv-python-headless
-requests
-motor
-pytz
-flask
-aiohttp
-telethon
-aiojobs
-werkzeug==2.2.2
-apscheduler 
-telethon-tgcrypto
-mutagen
-yt-dlp
-speedtest-cli
+telethon==1.34.0
+motor==3.4.0
+pymongo==4.7.2
+Flask==3.0.3
+devgagantools==0.0.6  # (if you actually use it; else remove)
