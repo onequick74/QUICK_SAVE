@@ -1,11 +1,16 @@
-from flask import Flask, jsonify
+from jaat import app  # ✅ folder name updated
+from pyrogram import idle
+import asyncio
 
-app = Flask(__name__)
 
-@app.route("/", methods=["GET", "HEAD"])
-def home():
-    return jsonify({"ok": True, "app": "QUICK_SAVE"})
+async def main():
+    print("🚀 Star Jaat Bot starting ...")
+    await app.start()
+    print("✅ Bot started successfully! Waiting for events ...")
+    await idle()
+    await app.stop()
+    print("🛑 Bot stopped.")
+
 
 if __name__ == "__main__":
-    # Runs on 0.0.0.0:5000 like your logs show
-    app.run(host="0.0.0.0", port=5000)
+    asyncio.run(main())
