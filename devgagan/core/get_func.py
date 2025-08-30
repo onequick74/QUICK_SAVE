@@ -10,15 +10,12 @@ from typing import Callable
 from devgagan import app
 import aiofiles
 from devgagan import sex as gf
-from telethon.tl.types import DocumentAttributeVideo, Message
+from telethon.tl.types import DocumentAttributeVideo, Message as TeleMessage
 from telethon.sessions import StringSession
 import pymongo
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message as PyroMessage
+from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid, RPCError
 from pyrogram.enums import MessageMediaType, ParseMode
-from devgagan.core.func import *
-from pyrogram.errors import RPCError
-from pyrogram.types import Message
 from config import MONGO_DB as MONGODB_CONNECTION_STRING, LOG_GROUP, OWNER_ID, STRING, API_ID, API_HASH
 from devgagan.core.mongo import db as odb
 from telethon import TelegramClient, events, Button
@@ -68,7 +65,38 @@ async def format_caption_to_html(caption: str) -> str:
     return caption.strip() if caption else None
 
 # ------------------------
+# Progress Bar (Pyrogram)
+# ------------------------
+async def progress_bar(current, total, message, start):
+    try:
+        now = time.time()
+        diff = now - start
+        if diff == 0:
+            return
+        percentage = current * 100 / total
+        speed = current / diff
+        elapsed_time = round(diff)
+        text = f"**Progress:** {percentage:.2f}%\n**Uploaded:** {current//1024//1024} MB"
+        try:
+            await message.edit_text(text)
+        except Exception:
+            pass
+    except Exception as e:
+        print(f"Progress bar error: {e}")
+
+# ------------------------
+# Telethon Progress Callback
+# ------------------------
+def progress_callback(done, total, sender):
+    try:
+        percent = int(done / total * 100)
+        print(f"[{sender}] Uploading: {percent}%")
+    except Exception:
+        pass
+
+# ------------------------
 # Corrected upload_media function
+# ------------------------
 async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
     try:
         upload_method = await fetch_upload_method(sender)
@@ -104,7 +132,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
                     reply_to_message_id=topic_id,
                     parse_mode=ParseMode.MARKDOWN,
                     progress=progress_bar,
-                    progress_args=("╭─────────────────────╮\n│      **__STAR UPLOADER__**\n├─────────────────────", edit, time.time())
+                    progress_args=(edit, time.time())
                 )
                 await dm.copy(LOG_GROUP)
 
@@ -116,7 +144,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
                     parse_mode=ParseMode.MARKDOWN,
                     progress=progress_bar,
                     reply_to_message_id=topic_id,
-                    progress_args=("╭─────────────────────╮\n│      **__Pyro Uploader__**\n├─────────────────────", edit, time.time())
+                    progress_args=(edit, time.time())
                 )
                 await dm.copy(LOG_GROUP)
             else:
@@ -128,7 +156,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
                     reply_to_message_id=topic_id,
                     progress=progress_bar,
                     parse_mode=ParseMode.MARKDOWN,
-                    progress_args=("╭─────────────────────╮\n│      **__Pyro Uploader__**\n├─────────────────────", edit, time.time())
+                    progress_args=(edit, time.time())
                 )
                 await asyncio.sleep(2)
                 await dm.copy(LOG_GROUP)
@@ -178,9 +206,31 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
         print(f"Error during media upload: {e}")
 
     finally:
-        # ✅ Do NOT delete thumb_path here. Only delete if user updates thumbnail manually
         gc.collect()
-# ------------------------
 
-# Rest of get_func.py can remain same
-# All other functions (get_msg, clone_message, etc.) can stay unchanged
+# ------------------------
+# get_msg function (MISSING EARLIER)
+# ------------------------
+async def get_msg(message):
+    """
+    Extract text/caption from Pyrogram or Telethon messages
+    """
+    try:
+        # Pyrogram message
+        if isinstance(message, PyroMessage):
+            if message.text:
+                return message.text
+            if message.caption:
+                return message.caption
+
+        # Telethon message
+        if isinstance(message, TeleMessage):
+            if message.message:
+                return message.message
+            if message.text:
+                return message.text
+
+        return None
+    except Exception as e:
+        print(f"get_msg error: {e}")
+        return None
