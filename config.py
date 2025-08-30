@@ -1,23 +1,29 @@
 import os
 
-# Required (get these from https://my.telegram.org)
-API_ID = int(os.getenv("API_ID", "0"))
-API_HASH = os.getenv("API_HASH", "")
+# Telegram API (https://my.telegram.org)
+API_ID = int(os.environ.get("API_ID", "12345"))
+API_HASH = os.environ.get("API_HASH", "")
 
-# Your bot token from BotFather
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+# Bot token from @BotFather
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# Optional: Pyrogram user session strings
-STRING = os.getenv("STRING", "")               # userbot (pyrogram)
-DEFAULT_SESSION = os.getenv("DEFAULT_SESSION", "")
+# MongoDB connection (Mongo Atlas recommended)
+MONGO_DB = os.environ.get("MONGO_DB", "")
 
-# Optional: Telethon StringSession for the bot client (prevents FloodWait loops)
-# Generate once with scripts/generate_telethon_session.py then paste here/env.
-TELETHON_SESSION = os.getenv("TELETHON_SESSION", "")
+# Optional userbot sessions
+STRING = os.environ.get("STRING", None)             # Premium userbot
+DEFAULT_SESSION = os.environ.get("DEFAULT_SESSION", None)  # Fallback userbot
 
-# Mongo
-MONGO_DB = os.getenv("MONGO_DB", "mongodb://localhost:27017")
+# Bot owner & logging
+OWNER_ID = list(map(int, os.environ.get("OWNER_ID", "123456789").split()))
+LOG_GROUP = int(os.environ.get("LOG_GROUP", "-100123456789"))
 
-# Logging / Ownership
-LOG_GROUP = int(os.getenv("LOG_GROUP", "0"))   # e.g. -1001234567890
-OWNER_ID = int(os.getenv("OWNER_ID", "0"))
+# Force-subscribe channel (optional)
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-100123456789")) if os.environ.get("CHANNEL_ID") else None
+
+# Upload limits
+FREEMIUM_LIMIT = int(os.environ.get("FREEMIUM_LIMIT", "5"))      # free users
+PREMIUM_LIMIT = int(os.environ.get("PREMIUM_LIMIT", "50"))       # premium users
+
+# App name (branding)
+BOT_NAME = os.environ.get("BOT_NAME", "Star Jaat Uploader Bot")
