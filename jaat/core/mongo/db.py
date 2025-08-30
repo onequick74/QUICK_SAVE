@@ -2,99 +2,85 @@ from config import MONGO_DB
 from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
 
 mongo = MongoCli(MONGO_DB)
-_database = mongo.user_data
-_collection = _database.users_data_db
+db = mongo.user_data
+db = db.users_data_db
 
 async def get_data(user_id):
-    """Return the user's document or None."""
-    return await _collection.find_one({"_id": user_id})
+    x = await db.find_one({"_id": user_id})
+    return x
 
 async def set_thumbnail(user_id, thumb):
-    """Set or update thumbnail path for a user."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"thumb": thumb}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"thumb": thumb}})
+    else:
+        await db.insert_one({"_id": user_id, "thumb": thumb})
 
 async def set_caption(user_id, caption):
-    """Set or update default caption for a user."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"caption": caption}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"caption": caption}})
+    else:
+        await db.insert_one({"_id": user_id, "caption": caption})
 
 async def replace_caption(user_id, replace_txt, to_replace):
-    """Store replacement mapping for captions (two fields)."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"replace_txt": replace_txt, "to_replace": to_replace}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"replace_txt": replace_txt, "to_replace": to_replace}})
+    else:
+        await db.insert_one({"_id": user_id, "replace_txt": replace_txt, "to_replace": to_replace})
 
 async def set_session(user_id, session):
-    """Save exported session string for a user (for userbot)."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"session": session}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"session": session}})
+    else:
+        await db.insert_one({"_id": user_id, "session": session})
 
 async def clean_words(user_id, new_clean_words):
-    """Add new words to clean_words list (keeps unique entries)."""
-    if not isinstance(new_clean_words, list):
-        new_clean_words = [new_clean_words]
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$addToSet": {"clean_words": {"$each": new_clean_words}}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        existing_words = data.get("clean_words", [])
+        if existing_words is None:
+            existing_words = []
+        updated_words = list(set(existing_words + new_clean_words))
+        await db.update_one({"_id": user_id}, {"$set": {"clean_words": updated_words}})
+    else:
+        await db.insert_one({"_id": user_id, "clean_words": new_clean_words})
 
 async def remove_clean_words(user_id, words_to_remove):
-    """Remove given words from the user's clean_words list."""
-    if not isinstance(words_to_remove, list):
-        words_to_remove = [words_to_remove]
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$pullAll": {"clean_words": words_to_remove}}
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        existing_words = data.get("clean_words", [])
+        updated_words = [word for word in existing_words if word not in words_to_remove]
+        await db.update_one({"_id": user_id}, {"$set": {"clean_words": updated_words}})
+    else:
+        await db.insert_one({"_id": user_id, "clean_words": []})
 
 async def set_channel(user_id, chat_id):
-    """Set user's preferred/target chat_id."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"chat_id": chat_id}},
-        upsert=True
-    )
+    data = await get_data(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"chat_id": chat_id}})
+    else:
+        await db.insert_one({"_id": user_id, "chat_id": chat_id})
 
 async def all_words_remove(user_id):
-    """Clear all clean_words for a user."""
-    await _collection.update_one(
-        {"_id": user_id},
-        {"$set": {"clean_words": []}}
-    )
+    await db.update_one({"_id": user_id}, {"$set": {"clean_words": None}})
 
 async def remove_thumbnail(user_id):
-    """Remove thumbnail field."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"thumb": ""}})
+    await db.update_one({"_id": user_id}, {"$set": {"thumb": None}})
 
 async def remove_caption(user_id):
-    """Remove caption field."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"caption": ""}})
+    await db.update_one({"_id": user_id}, {"$set": {"caption": None}})
 
 async def remove_replace(user_id):
-    """Remove replace_txt and to_replace fields."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"replace_txt": "", "to_replace": ""}})
+    await db.update_one({"_id": user_id}, {"$set": {"replace_txt": None, "to_replace": None}})
 
 async def remove_session(user_id):
-    """Remove stored session string (keeps doc intact)."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"session": ""}})
+    await db.update_one({"_id": user_id}, {"$set": {"session": None}})
 
 async def remove_channel(user_id):
-    """Remove stored chat_id."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"chat_id": ""}})
+    await db.update_one({"_id": user_id}, {"$set": {"chat_id": None}})
 
 async def delete_session(user_id):
-    """Alias to explicitly unset session field (keeps doc intact)."""
-    await _collection.update_one({"_id": user_id}, {"$unset": {"session": ""}})
+    await db.update_one({"_id": user_id}, {"$unset": {"session": ""}})
