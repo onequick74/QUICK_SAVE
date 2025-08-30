@@ -1,15 +1,14 @@
 import glob
-import os
+from os.path import basename, dirname, isfile
 
-# Collect all modules dynamically
 def __list_all_modules():
-    modules = []
-    files = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))
-    for f in files:
-        name = os.path.basename(f)[:-3]
-        if name == "__init__" or name.startswith("_"):
-            continue
-        modules.append(name)
-    return modules
+    mod_paths = glob.glob(dirname(__file__) + "/*.py")
+    all_modules = [
+        basename(f)[:-3]
+        for f in mod_paths
+        if isfile(f) and f.endswith(".py") and not f.endswith("__init__.py")
+    ]
+    return all_modules
 
-ALL_MODULES = __list_all_modules()
+ALL_MODULES = sorted(__list_all_modules())
+__all__ = ALL_MODULES + ["ALL_MODULES"]
