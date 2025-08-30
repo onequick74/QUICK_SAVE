@@ -3,28 +3,31 @@ from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
 
 mongo = MongoCli(MONGO_DB)
 db = mongo.users
-users_col = db.users_db
+db = db.users_db
 
 async def get_users():
-    """Return list of all user IDs."""
     user_list = []
-    async for user in users_col.find({"user": {"$gt": 0}}):
+    async for user in db.users.find({"user": {"$gt": 0}}):
         user_list.append(user['user'])
     return user_list
 
-async def get_user(user_id: int):
-    """Check if user exists in DB."""
+async def get_user(user):
     users = await get_users()
-    return user_id in users
+    if user in users:
+        return True
+    else:
+        return False
 
-async def add_user(user_id: int):
-    """Add new user to DB if not already present."""
+async def add_user(user):
     users = await get_users()
-    if user_id not in users:
-        await users_col.insert_one({"user": user_id})
+    if user in users:
+        return
+    else:
+        await db.users.insert_one({"user": user})
 
-async def del_user(user_id: int):
-    """Delete user from DB if exists."""
+async def del_user(user):
     users = await get_users()
-    if user_id in users:
-        await users_col.delete_one({"user": user_id})
+    if not user in users:
+        return
+    else:
+        await db.users.delete_one({"user": user})
