@@ -1,5 +1,6 @@
 build:
   docker:
-    worker: Dockerfile
+    web: Dockerfile
+
 run:
-  worker: python3 -m devgagan
+  web: python3 app.py
