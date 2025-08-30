@@ -1,17 +1,27 @@
-FROM python:3.10.4-slim-buster
+# Use maintained Python base image
+FROM python:3.10-slim-bullseye
 
-RUN apt update && apt upgrade -y
-RUN apt-get install git curl python3-pip ffmpeg -y
-RUN apt-get -y install git
-RUN apt-get install -y wget python3-pip curl bash neofetch ffmpeg software-properties-common
+# Install dependencies
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    git curl wget python3-pip bash neofetch ffmpeg software-properties-common && \
+    rm -rf /var/lib/apt/lists/*
 
+# Copy requirements
 COPY requirements.txt .
 
-RUN pip3 install wheel
-RUN pip3 install --no-cache-dir -U -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
+# Set workdir
 WORKDIR /app
+
+# Copy source code
 COPY . .
+
+# Expose port
 EXPOSE 5000
 
+# Start application
 CMD flask run -h 0.0.0.0 -p 5000 & python3 -m jaat
