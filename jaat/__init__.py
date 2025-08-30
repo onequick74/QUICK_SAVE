@@ -40,7 +40,6 @@ else:
 
 telethon_client = TelegramClient('telethon_session', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
-# MongoDB setup
 tclient = AsyncIOMotorClient(MONGO_DB)
 tdb = tclient["telegram_bot"]
 token = tdb["tokens"]
