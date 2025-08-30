@@ -1,6 +1,5 @@
 build:
   docker:
-    web: Dockerfile
-
+    worker: Dockerfile
 run:
-  web: python3 app.py
+  worker: python3 -m jaat
