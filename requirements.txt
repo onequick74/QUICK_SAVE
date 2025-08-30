@@ -3,7 +3,7 @@ pyrofork
 psutil
 aiofiles
 pillow
-jaattools
+devgagantools
 tgcrypto
 pyromod
 opencv-python-headless
@@ -15,7 +15,7 @@ aiohttp
 telethon
 aiojobs
 werkzeug==2.2.2
-apscheduler
+apscheduler 
 telethon-tgcrypto
 mutagen
 yt-dlp
