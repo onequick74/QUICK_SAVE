@@ -1,30 +1,46 @@
- #---------------------------------------------------
- #STAR JAAT
+# devgagan/__main__.py
+# ---------------------------------------------------
+# STAR JAAT (fixed)
 
 import asyncio
 import importlib
 import gc
+import logging
 from pyrogram import idle
 from devgagan.modules import ALL_MODULES
 from devgagan.core.mongo.plans_db import check_and_remove_expired_users
 from aiojobs import create_scheduler
 
-# ----------------------------Bot-Start---------------------------- #
+# ---------------------------------------------------
+# Bot Start
+# ---------------------------------------------------
 
 loop = asyncio.get_event_loop()
 
-# Function to schedule expiry checks
+
 async def schedule_expiry_check():
-    scheduler = await create_scheduler()
+    """Periodically check & remove expired users from DB."""
+    scheduler = create_scheduler()
     while True:
-        await scheduler.spawn(check_and_remove_expired_users())
-        await asyncio.sleep(60)  # Check every hour
+        try:
+            await scheduler.spawn(check_and_remove_expired_users())
+        except Exception as e:
+            logging.error(f"Expiry check failed: {e}")
+        # 1 hour interval
+        await asyncio.sleep(3600)
         gc.collect()
 
+
 async def devggn_boot():
-    for all_module in ALL_MODULES:
-        importlib.import_module("devgagan.modules." + all_module)
-    print("""
+    # Dynamically import all modules
+    for module_name in ALL_MODULES:
+        try:
+            importlib.import_module("devgagan.modules." + module_name)
+        except Exception as e:
+            logging.error(f"Failed to load module {module_name}: {e}")
+
+    print(
+        """
 ---------------------------------------------------
 📂 Bot Deployed successfully ...
 📝 Description: A Pyrogram bot for downloading files from Telegram channels or groups 
@@ -38,15 +54,19 @@ async def devggn_boot():
 🛠️ Version: 2.0.5
 📜 License: MIT License
 ---------------------------------------------------
-""")
+"""
+    )
 
+    # Start background expiry check
     asyncio.create_task(schedule_expiry_check())
-    print("Auto removal started ...")
+    print("Auto removal of expired users started ...")
+
     await idle()
     print("Bot stopped...")
 
 
 if __name__ == "__main__":
-    loop.run_until_complete(devggn_boot())
-
-# ------------------------------------------------------------------ #
+    try:
+        loop.run_until_complete(devggn_boot())
+    except KeyboardInterrupt:
+        print("Bot interrupted and shutting down...")
