@@ -5,20 +5,14 @@ import os
 import re
 from typing import Optional
 from jaat import app
-from jaat import sex as gf
 from telethon.tl.types import DocumentAttributeVideo
 import pymongo
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid
 from pyrogram.enums import MessageMediaType, ParseMode
-from jaat.core.func import *
+from jaat.core.funk import *   # ✅ fixed
 from config import MONGO_DB, LOG_GROUP, OWNER_ID, STRING, API_ID, API_HASH
 from jaat.core.mongo import db as odb
-
-try:
-    from devgagantools import fast_upload
-except Exception:
-    fast_upload = None
 
 DB_NAME = "smart_users"
 COLLECTION_NAME = "super_user"
@@ -30,13 +24,16 @@ VIDEO_EXTENSIONS = {'mp4', 'mkv', 'avi', 'mov'}
 IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 DOCUMENT_EXTENSIONS = {'pdf', 'docx', 'txt', 'epub'}
 
+
 def thumbnail(sender: str) -> Optional[str]:
     path = f"{sender}.jpg"
     return path if os.path.exists(path) else None
 
+
 async def fetch_upload_method(user_id: int) -> str:
     user_data = collection.find_one({"user_id": user_id})
     return user_data.get("upload_method", "Pyrogram") if user_data else "Pyrogram"
+
 
 async def format_caption_to_html(caption: str) -> str:
     if not caption:
@@ -53,11 +50,13 @@ async def format_caption_to_html(caption: str) -> str:
     caption = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2">\1</a>', caption)
     return caption.strip()
 
+
 async def upload_media(sender, target_chat_id, file_path, caption, edit_message, topic_id):
     try:
         upload_method = await fetch_upload_method(sender)
         metadata = video_metadata(file_path)
         width, height, duration = metadata['width'], metadata['height'], metadata['duration']
+
         thumb = None
         try:
             thumb = await screenshot(file_path, duration, sender)
@@ -107,38 +106,6 @@ async def upload_media(sender, target_chat_id, file_path, caption, edit_message,
             except Exception:
                 pass
 
-        elif upload_method == "Telethon":
-            if fast_upload is None:
-                raise RuntimeError("Telethon fast_upload is not available on this environment.")
-            await edit_message.delete()
-            progress_message = await gf.send_message(sender, "**Uploading...**")
-            html_caption = await format_caption_to_html(caption) if caption else None
-            uploaded = await fast_upload(
-                gf, file_path,
-                reply=progress_message,
-                name=None,
-                progress_bar_function=lambda d, t: asyncio.get_event_loop().create_task(progress_callback(d, t, progress_message))
-            )
-            await progress_message.delete()
-
-            attributes = []
-            if ext in VIDEO_EXTENSIONS:
-                attributes = [DocumentAttributeVideo(duration=duration, w=width, h=height, supports_streaming=True)]
-
-            await gf.send_file(
-                target_chat_id,
-                uploaded,
-                caption=html_caption,
-                attributes=attributes,
-                reply_to=topic_id,
-                thumb=thumb,
-                parse_mode='html'
-            )
-            try:
-                await gf.send_file(LOG_GROUP, uploaded, caption=html_caption, attributes=attributes, thumb=thumb, parse_mode='html')
-            except Exception:
-                pass
-
     except Exception as e:
         try:
             await app.send_message(LOG_GROUP, f"**Upload Failed:** {str(e)}")
@@ -153,5 +120,3 @@ async def upload_media(sender, target_chat_id, file_path, caption, edit_message,
             except Exception:
                 pass
         gc.collect()
-
-# (Baaki helper functions bhi isi file me included hain jaise get_msg, clone_message, download_user_stories etc.)
