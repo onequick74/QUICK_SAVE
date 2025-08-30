@@ -12,21 +12,24 @@ async def schedule_expiry_check():
     scheduler = await create_scheduler()
     while True:
         await scheduler.spawn(check_and_remove_expired_users())
-        await asyncio.sleep(3600)  # check every 1 hour
+        await asyncio.sleep(60)
         gc.collect()
 
-async def jaat_boot():
-    for module_name in ALL_MODULES:
-        try:
-            importlib.import_module(f"jaat.modules.{module_name}")
-        except Exception as e:
-            print(f"[WARN] Failed to import module {module_name}: {e}")
+async def devggn_boot():
+    for all_module in ALL_MODULES:
+        importlib.import_module("jaat.modules." + all_module)
+    print("""
+---------------------------------------------------
+📂 Bot Deployed successfully ...
+📝 Description: A Pyrogram bot for downloading files from Telegram channels or groups 
+                and uploading them back to Telegram.
+---------------------------------------------------
+""")
 
-    print("✅ Bot deployed successfully.")
     asyncio.create_task(schedule_expiry_check())
-    print("⏳ Auto removal started ...")
+    print("Auto removal started ...")
     await idle()
-    print("❌ Bot stopped.")
+    print("Bot stopped...")
 
 if __name__ == "__main__":
-    loop.run_until_complete(jaat_boot())
+    loop.run_until_complete(devggn_boot())
