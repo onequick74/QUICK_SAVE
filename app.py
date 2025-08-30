@@ -1,85 +1,14 @@
-{
-  "name": "Save Restricted Content Bot master-v1 branch",
-  "description": "Save Restricted Content Bot by Star Jaat",
-  "logo": "https://telegra.ph/file/cad7038fe82e47f79c609.jpg",
-  "keywords": ["python3", "telegram", "MusicBot", "telegram-bot", "pyrogram"],
-  "repository": "https://github.com/jaat/save_restricted-content-telegram-bot-repo",
-  "success_url": "https://starjaat.in",
-  "env": {
-    "API_ID": {
-      "description": "Get this value from https://my.telegram.org",
-      "value": "your_api_id_here",
-      "required": true
-    },
-    "API_HASH": {
-      "description": "Get this value from https://my.telegram.org",
-      "value": "your_api_hash_here",
-      "required": true
-    },
-    "BOT_TOKEN": {
-      "description": "A Bot's token from Botfather",
-      "value": "your_bot_token_here",
-      "required": true
-    },
-    "MONGO_DB": {
-      "description": "Get a MongoDB URL from https://cloud.mongodb.com.",
-      "value": "your_mongodb_url_here",
-      "required": true
-    },
-    "OWNER_ID": {
-      "description": "The user ID of the user whom you would like to add as OWNER.",
-      "value": "owner_user_id_here",
-      "required": true
-    },    
-    "FREEMIUM_LIMIT": {
-      "description": "Batch size for free users",
-      "value": "0",
-      "required": true
-    },
-    "PREMIUM_LIMIT": {
-      "description": "Batch size for premium users",
-      "value": "500",
-      "required": true
-    },
-    "STRING": {
-      "description": "Enter premium account session string if you want to allow the paid users to upload upto 4GB",
-      "value": "",
-      "required": false
-    },
-    "DEFAULT_SESSION": {
-      "description": "Enter session string if you want YOUR USERS not to be forced login and can do things via invite_link",
-      "value": "",
-      "required": false
-    },
-    "WEBSITE_URL": {
-      "description": "Enter shortener website domain eg upshrink.com",
-      "value": "upshrink.com",
-      "required": false
-    },
-    "AD_API": {
-      "description": "Batch size for premium users",
-      "value": "1a1f1cb9ba85a88dc7cc5fcb473ff79a",
-      "required": false
-    },
-    "SUDO_USERS": {
-      "description": "Other Admins' IDs (optional)",
-      "value": "",
-      "required": false
-    },
-    "CHANNEL_ID": {
-      "description": "Enter Channel ID (-100) and make bot admin there",
-      "value": "channel_id_here",
-      "required": true
-    },
-    "LOG_GROUP": {
-      "description": "Enter Log Channel/Group ID (-100) and make bot admin there",
-      "value": "log_group_id_here",
-      "required": true
-    }
-  },
-  "buildpacks": [
-    { "url": "heroku/python" },
-    { "url": "https://github.com/heroku/heroku-buildpack-activestorage-preview" }
-  ],
-  "stack": "container"
-}
+import os
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route("/")
+def welcome():
+    # Render the welcome page with animated "Star Jaat" text
+    return render_template("welcome.html")
+
+if __name__ == "__main__":
+    # Default to port 5000 if PORT is not set in the environment
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
