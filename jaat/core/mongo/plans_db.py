@@ -1,40 +1,34 @@
 import datetime
-from config import MONGO_DB
 from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
+from config import MONGO_DB
 
 mongo = MongoCli(MONGO_DB)
-plans_db = mongo.plans
-plans_col = plans_db.plans_col
+db = mongo.premium
+db = db.premium_db
 
-async def add_user_plan(user_id: int, plan: str, duration_days: int):
-    """Add a new plan for a user with expiry date."""
-    expiry_date = datetime.datetime.utcnow() + datetime.timedelta(days=duration_days)
-    await plans_col.update_one(
-        {"user_id": user_id},
-        {"$set": {"plan": plan, "expiry_date": expiry_date}},
-        upsert=True
-    )
+async def add_premium(user_id, expire_date):
+    data = await check_premium(user_id)
+    if data and data.get("_id"):
+        await db.update_one({"_id": user_id}, {"$set": {"expire_date": expire_date}})
+    else:
+        await db.insert_one({"_id": user_id, "expire_date": expire_date})
 
-async def get_user_plan(user_id: int):
-    """Get plan info for a user (dict with plan & expiry_date)."""
-    return await plans_col.find_one({"user_id": user_id})
+async def remove_premium(user_id):
+    await db.delete_one({"_id": user_id})
 
-async def remove_user_plan(user_id: int):
-    """Remove a user's plan entry."""
-    await plans_col.delete_one({"user_id": user_id})
-
-async def check_and_remove_expired_users():
-    """Auto-remove expired users (runs every hour via __main__)."""
-    now = datetime.datetime.utcnow()
-    expired_users = plans_col.find({"expiry_date": {"$lte": now}})
-    async for user in expired_users:
-        await plans_col.delete_one({"user_id": user["user_id"]})
-        print(f"[INFO] Removed expired user: {user['user_id']}")
+async def check_premium(user_id):
+    return await db.find_one({"_id": user_id})
 
 async def premium_users():
-    """Return list of user_ids who have active premium plan."""
-    now = datetime.datetime.utcnow()
-    user_list = []
-    async for user in plans_col.find({"expiry_date": {"$gt": now}}):
-        user_list.append(user["user_id"])
-    return user_list
+    id_list = []
+    async for data in db.find():
+        id_list.append(data["_id"])
+    return id_list
+
+async def check_and_remove_expired_users():
+    current_time = datetime.datetime.utcnow()
+    async for data in db.find():
+        expire_date = data.get("expire_date")
+        if expire_date and expire_date < current_time:
+            await remove_premium(data["_id"])
+            print(f"Removed user {data['_id']} due to expired plan.")
