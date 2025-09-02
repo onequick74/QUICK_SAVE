@@ -1,11 +1,11 @@
 from pyrogram import filters, Client
-from jaat import app
+from jaat import app   # 🔹 changed devgagan → jaat
 import random
 import os
 import asyncio
 import string
-from jaat.core.mongo import db
-from jaat.core.func import subscribe, chk_user
+from jaat.core.mongo import db   # 🔹 changed devgagan → jaat
+from jaat.core.func import subscribe, chk_user   # 🔹 changed devgagan → jaat
 from config import API_ID as api_id, API_HASH as api_hash
 from pyrogram.errors import (
     ApiIdInvalid,
@@ -34,6 +34,7 @@ async def delete_session_files(user_id):
     if memory_file_exists:
         os.remove(memory_file)
 
+    # Delete session from the database
     if session_file_exists or memory_file_exists:
         await db.remove_session(user_id)
         return True
@@ -52,13 +53,18 @@ async def clear_db(client, message):
         await message.reply("✅ Your session data and files have been cleared from memory and disk.")
     else:
         await message.reply("✅ Logged out with flag -m")
-
+        
+    
 @app.on_message(filters.command("login"))
 async def generate_session(_, message):
     joined = await subscribe(_, message)
     if joined == 1:
         return
-
+        
+    # user_checked = await chk_user(message, message.from_user.id)
+    # if user_checked == 1:
+    #     return
+        
     user_id = message.chat.id   
     
     number = await _.ask(user_id, 'Please enter your phone number along with the country code. \nExample: +19876543210', filters=filters.text)   
@@ -66,6 +72,7 @@ async def generate_session(_, message):
     try:
         await message.reply("📲 Sending OTP...")
         client = Client(f"session_{user_id}", api_id, api_hash)
+        
         await client.connect()
     except Exception as e:
         await message.reply(f"❌ Failed to send OTP {e}. Please wait and try again later.")
@@ -85,6 +92,7 @@ async def generate_session(_, message):
     phone_code = otp_code.text.replace(" ", "")
     try:
         await client.sign_in(phone_number, code.phone_code_hash, phone_code)
+                
     except PhoneCodeInvalid:
         await message.reply('❌ Invalid OTP. Please restart the session.')
         return
