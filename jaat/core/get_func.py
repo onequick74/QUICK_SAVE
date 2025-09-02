@@ -19,7 +19,7 @@ from pyrogram.types import Message
 from config import MONGO_DB as MONGODB_CONNECTION_STRING, LOG_GROUP, OWNER_ID, STRING, API_ID, API_HASH
 from jaat.core.mongo import db as odb
 from telethon import TelegramClient, events, Button
-from jaattools import fast_upload
+from devgagantools import fast_upload
 
 def thumbnail(sender):
     return f'{sender}.jpg' if os.path.exists(f'{sender}.jpg') else None
