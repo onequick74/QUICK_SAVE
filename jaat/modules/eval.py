@@ -14,10 +14,12 @@ async def aexec(code, client, message):
     )
     return await locals()["__aexec"](client, message)
 
+
 async def edit_or_reply(msg, **kwargs):
     func = msg.edit_text if msg.from_user.is_self else msg.reply
     spec = getfullargspec(func.__wrapped__).args
     await func(**{k: v for k, v in kwargs.items() if k in spec})
+
 
 @app.on_edited_message(
     filters.command(["evv", "evr"])
@@ -68,7 +70,14 @@ async def executor(client, message):
             out_file.write(str(evaluation))
         t2 = time()
         keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(text="⏳", callback_data=f"runtime {t2-t1} Seconds")]]
+            [
+                [
+                    InlineKeyboardButton(
+                        text="⏳",
+                        callback_data=f"runtime {t2-t1} Seconds",
+                    )
+                ]
+            ]
         )
         await message.reply_document(
             document=filename,
@@ -81,21 +90,27 @@ async def executor(client, message):
     else:
         t2 = time()
         keyboard = InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton(
-                    text="⏳", callback_data=f"runtime {round(t2-t1, 3)} Seconds"
-                ),
-                InlineKeyboardButton(
-                    text="🗑", callback_data=f"forceclose abc|{message.from_user.id}"
-                ),
-            ]]
+            [
+                [
+                    InlineKeyboardButton(
+                        text="⏳",
+                        callback_data=f"runtime {round(t2-t1, 3)} Seconds",
+                    ),
+                    InlineKeyboardButton(
+                        text="🗑",
+                        callback_data=f"forceclose abc|{message.from_user.id}",
+                    ),
+                ]
+            ]
         )
         await edit_or_reply(message, text=final_output, reply_markup=keyboard)
+
 
 @app.on_callback_query(filters.regex(r"runtime"))
 async def runtime_func_cq(_, cq):
     runtime = cq.data.split(None, 1)[1]
     await cq.answer(runtime, show_alert=True)
+
 
 @app.on_callback_query(filters.regex("fclose"))
 async def forceclose_command(_, CallbackQuery):
@@ -114,6 +129,9 @@ async def forceclose_command(_, CallbackQuery):
         await CallbackQuery.answer()
     except:
         return
+
+
+
 
 @app.on_edited_message(
     filters.command("shll")
@@ -138,7 +156,9 @@ async def shellrunner(_, message):
             shell = re.split(""" (?=(?:[^'"]|'[^']*'|"[^"]*")*$)""", x)
             try:
                 process = subprocess.Popen(
-                    shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    shell,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                 )
             except Exception as err:
                 await edit_or_reply(message, text=f"<b>ERROR :</b>\n<pre>{err}</pre>")
@@ -151,13 +171,17 @@ async def shellrunner(_, message):
             shell[a] = shell[a].replace('"', "")
         try:
             process = subprocess.Popen(
-                shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                shell,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
         except Exception as err:
             print(err)
             exc_type, exc_obj, exc_tb = sys.exc_info()
             errors = traceback.format_exception(
-                etype=exc_type, value=exc_obj, tb=exc_tb,
+                etype=exc_type,
+                value=exc_obj,
+                tb=exc_tb,
             )
             return await edit_or_reply(
                 message, text=f"<b>ERROR :</b>\n<pre>{''.join(errors)}</pre>"
@@ -180,6 +204,7 @@ async def shellrunner(_, message):
     else:
         await edit_or_reply(message, text="<b>OUTPUT :</b>\n<code>None</code>")
     await message.stop_propagation()
+
 
 @app.on_message(filters.command("restart") & filters.user(OWNER_ID))
 async def update(_, message):
