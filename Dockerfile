@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     neofetch \
     software-properties-common \
+    supervisor \
  && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -24,8 +25,11 @@ RUN pip3 install --no-cache-dir -U pip wheel \
 # Copy project files
 COPY . .
 
-# Expose port
+# Expose port for Flask
 EXPOSE 5000
 
-# Run the app
-CMD ["bash", "-c", "flask run -h 0.0.0.0 -p 5000 & python3 -m devgagan"]
+# Copy supervisor config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Run both processes with supervisord
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
