@@ -1,5 +1,3 @@
-# jaat
-# ---------------------------------------------------
 
 import asyncio
 import logging
