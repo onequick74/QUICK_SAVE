@@ -1,27 +1,31 @@
-# Use maintained Python base image
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim-bookworm
 
 # Install dependencies
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    git curl wget python3-pip bash neofetch ffmpeg software-properties-common && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    ffmpeg \
+    wget \
+    bash \
+    neofetch \
+    software-properties-common \
+ && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir wheel && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Set workdir
+# Set working directory
 WORKDIR /app
 
-# Copy source code
+# Copy requirements first (for caching)
+COPY requirements.txt .
+
+# Install Python deps
+RUN pip3 install --no-cache-dir -U pip wheel \
+ && pip3 install --no-cache-dir -r requirements.txt
+
+# Copy project files
 COPY . .
 
 # Expose port
 EXPOSE 5000
 
-# Start application
-CMD flask run -h 0.0.0.0 -p 5000 & python3 -m jaat
+# Run the app
+CMD ["bash", "-c", "flask run -h 0.0.0.0 -p 5000 & python3 -m devgagan"]
