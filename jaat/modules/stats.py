@@ -7,8 +7,9 @@ from config import OWNER_ID
 from jaat.core.mongo.users_db import get_users, add_user, get_user
 from jaat.core.mongo.plans_db import premium_users
 
-start_time = time.time()
 
+
+start_time = time.time()
 
 @app.on_message(group=10)
 async def chat_watcher_func(_, message):
@@ -19,6 +20,7 @@ async def chat_watcher_func(_, message):
                 await add_user(message.from_user.id)
     except:
         pass
+
 
 
 def time_formatter():
@@ -52,9 +54,11 @@ async def stats(client, message):
 **Stats of** {(await client.get_me()).mention} :
 
 🏓 **Ping Pong**: {ping}ms
+
 📊 **Total Users** : `{users}`
 📈 **Premium Users** : `{len(premium)}`
 ⚙️ **Bot Uptime** : `{time_formatter()}`
+    
 🎨 **Python Version**: `{sys.version.split()[0]}`
 📑 **Mongo Version**: `{motor.version}`
 """)
