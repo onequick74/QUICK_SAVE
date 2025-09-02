@@ -1,29 +1,80 @@
-from pyrogram import Client, filters
-from pyrogram.types import Message
+import asyncio
+from pyrogram import filters
 from config import OWNER_ID
-from jaat.core.mongo.users_db import get_users
 from jaat import app
+from jaat.core.mongo.users_db import get_users
+
+async def send_msg(user_id, message):
+    try:
+        x = await message.copy(chat_id=user_id)
+        try:
+            await x.pin()
+        except Exception:
+            await x.pin(both_sides=True)
+    except FloodWait as e:
+        await asyncio.sleep(e.x)
+        return send_msg(user_id, message)
+    except InputUserDeactivated:
+        return 400, f"{user_id} : deactivated\n"
+    except UserIsBlocked:
+        return 400, f"{user_id} : blocked the bot\n"
+    except PeerIdInvalid:
+        return 400, f"{user_id} : user id invalid\n"
+    except Exception:
+        return 500, f"{user_id} : {traceback.format_exc()}\n"
+
 
 @app.on_message(filters.command("gcast") & filters.user(OWNER_ID))
-async def broadcast_message(_, message: Message):
-    if len(message.command) < 2 and not message.reply_to_message:
-        return await message.reply_text("Usage: /gcast [message or reply to a message]")
+async def broadcast(_, message):
+    if not message.reply_to_message:
+        await message.reply_text("ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ ɪᴛ.")
+        return    
+    exmsg = await message.reply_text("sᴛᴀʀᴛᴇᴅ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ!")
+    all_users = (await get_users()) or {}
+    done_users = 0
+    failed_users = 0
     
-    text = message.text.split(None, 1)[1] if len(message.command) >= 2 else None
-    reply = message.reply_to_message
-    
-    sent = 0
-    failed = 0
-    
-    users = await get_users()
-    for user_id in users:
+    for user in all_users:
         try:
-            if reply:
-                await reply.copy(user_id)
-            elif text:
-                await app.send_message(user_id, text)
-            sent += 1
+            await send_msg(user, message.reply_to_message)
+            done_users += 1
+            await asyncio.sleep(0.1)
         except Exception:
-            failed += 1
-    
-    await message.reply_text(f"✅ Broadcast completed\n\n👤 Sent: {sent}\n❌ Failed: {failed}")
+            pass
+            failed_users += 1
+    if failed_users == 0:
+        await exmsg.edit_text(
+            f"**sᴜᴄᴄᴇssғᴜʟʟʏ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ ✅**\n\n**sᴇɴᴛ ᴍᴇssᴀɢᴇ ᴛᴏ** `{done_users}` **ᴜsᴇʀs**",
+        )
+    else:
+        await exmsg.edit_text(
+            f"**sᴜᴄᴄᴇssғᴜʟʟʏ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ ✅**\n\n**sᴇɴᴛ ᴍᴇssᴀɢᴇ ᴛᴏ** `{done_users}` **ᴜsᴇʀs**\n\n**ɴᴏᴛᴇ:-** `ᴅᴜᴇ ᴛᴏ sᴏᴍᴇ ɪssᴜᴇ ᴄᴀɴ'ᴛ ᴀʙʟᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ` `{failed_users}` **ᴜsᴇʀs**",
+        )
+
+
+
+@app.on_message(filters.command("acast") & filters.user(OWNER_ID))
+async def announced(_, message):
+    if message.reply_to_message:
+      to_send=message.reply_to_message.id
+    if not message.reply_to_message:
+      return await message.reply_text("Reply To Some Post To Broadcast")
+    users = await get_users() or []
+    print(users)
+    failed_user = 0
+  
+    for user in users:
+      try:
+        await _.forward_messages(chat_id=int(user), from_chat_id=message.chat.id, message_ids=to_send)
+        await asyncio.sleep(1)
+      except Exception as e:
+        failed_user += 1
+          
+    if failed_users == 0:
+        await exmsg.edit_text(
+            f"**sᴜᴄᴄᴇssғᴜʟʟʏ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ ✅**\n\n**sᴇɴᴛ ᴍᴇssᴀɢᴇ ᴛᴏ** `{done_users}` **ᴜsᴇʀs**",
+        )
+    else:
+        await exmsg.edit_text(
+            f"**sᴜᴄᴄᴇssғᴜʟʟʏ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ ✅**\n\n**sᴇɴᴛ ᴍᴇssᴀɢᴇ ᴛᴏ** `{done_users}` **ᴜsᴇʀs**\n\n**ɴᴏᴛᴇ:-** `ᴅᴜᴇ ᴛᴏ sᴏᴍᴇ ɪssᴜᴇ ᴄᴀɴ'ᴛ ᴀʙʟᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ` `{failed_users}` **ᴜsᴇʀs**",
+    )
