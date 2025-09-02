@@ -1,3 +1,6 @@
+# jaat
+# ---------------------------------------------------
+
 import asyncio
 import logging
 import time
@@ -33,6 +36,7 @@ if STRING:
 else:
     pro = None
 
+
 if DEFAULT_SESSION:
     userrbot = Client("userrbot", api_id=API_ID, api_hash=API_HASH, session_string=DEFAULT_SESSION)
 else:
@@ -40,13 +44,16 @@ else:
 
 telethon_client = TelegramClient('telethon_session', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
+# MongoDB setup
 tclient = AsyncIOMotorClient(MONGO_DB)
-tdb = tclient["telegram_bot"]
-token = tdb["tokens"]
+tdb = tclient["telegram_bot"]  # Your database
+token = tdb["tokens"]  # Your tokens collection
 
 async def create_ttl_index():
+    """Ensure the TTL index exists for the `tokens` collection."""
     await token.create_index("expires_at", expireAfterSeconds=0)
 
+# Run the TTL index creation when the bot starts
 async def setup_database():
     await create_ttl_index()
     print("MongoDB TTL index created.")
