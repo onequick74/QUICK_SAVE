@@ -1,11 +1,11 @@
 from pyrogram import filters, Client
-from jaat import app   # 🔹 changed devgagan → jaat
+from jaat import app
 import random
 import os
 import asyncio
 import string
-from jaat.core.mongo import db   # 🔹 changed devgagan → jaat
-from jaat.core.func import subscribe, chk_user   # 🔹 changed devgagan → jaat
+from jaat.core.mongo import db
+from jaat.core.func import subscribe, chk_user
 from config import API_ID as api_id, API_HASH as api_hash
 from pyrogram.errors import (
     ApiIdInvalid,
@@ -19,7 +19,7 @@ from pyrogram.errors import (
 
 def generate_random_name(length=7):
     characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
+    return ''.join(random.choice(characters) for _ in range(length))  # Editted ... 
 
 async def delete_session_files(user_id):
     session_file = f"session_{user_id}.session"
@@ -37,8 +37,8 @@ async def delete_session_files(user_id):
     # Delete session from the database
     if session_file_exists or memory_file_exists:
         await db.remove_session(user_id)
-        return True
-    return False
+        return True  # Files were deleted
+    return False  # No files found
 
 @app.on_message(filters.command("logout"))
 async def clear_db(client, message):
@@ -63,7 +63,7 @@ async def generate_session(_, message):
         
     # user_checked = await chk_user(message, message.from_user.id)
     # if user_checked == 1:
-    #     return
+        # return
         
     user_id = message.chat.id   
     
