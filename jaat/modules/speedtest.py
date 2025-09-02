@@ -1,5 +1,6 @@
 from time import time
 from speedtest import Speedtest
+import math
 from telethon import events
 from jaat import botStartTime
 from jaat import sex as gagan
@@ -9,15 +10,19 @@ SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 def get_readable_time(seconds: int) -> str:
     result = ''
     (days, remainder) = divmod(seconds, 86400)
-    if days:
-        result += f'{int(days)}d'
+    days = int(days)
+    if days != 0:
+        result += f'{days}d'
     (hours, remainder) = divmod(remainder, 3600)
-    if hours:
-        result += f'{int(hours)}h'
+    hours = int(hours)
+    if hours != 0:
+        result += f'{hours}h'
     (minutes, seconds) = divmod(remainder, 60)
-    if minutes:
-        result += f'{int(minutes)}m'
-    result += f'{int(seconds)}s'
+    minutes = int(minutes)
+    if minutes != 0:
+        result += f'{minutes}m'
+    seconds = int(seconds)
+    result += f'{seconds}s'
     return result
 
 def get_readable_file_size(size_in_bytes) -> str:
@@ -32,18 +37,18 @@ def get_readable_file_size(size_in_bytes) -> str:
     except IndexError:
         return 'File too large'
 
+
 @gagan.on(events.NewMessage(incoming=True, pattern='/speedtest'))
 async def speedtest(event):
-    speed = await event.reply("Running Speed Test. Please wait...")
+    speed = await event.reply("Running Speed Test. Wait about some secs.")  #edit telethon
     test = Speedtest()
     test.get_best_server()
     test.download()
     test.upload()
     test.results.share()
     result = test.results.dict()
-    path = result['share']
+    path = (result['share'])
     currentTime = get_readable_time(time() - botStartTime)
-
     string_speed = f'''
 ╭─《 🚀 SPEEDTEST INFO 》
 ├ <b>Upload:</b> <code>{speed_convert(result['upload'], False)}</code>
@@ -66,18 +71,17 @@ async def speedtest(event):
 ├ <b>Country:</b> <code>{result['client']['country']}</code>
 ├ <b>ISP:</b> <code>{result['client']['isp']}</code>
 ├ <b>ISP Rating:</b> <code>{result['client']['isprating']}</code>
-╰ <b>Powered by Star Jaat</b>
+╰ <b>Powered by Star jaat</b> 
 '''
     try:
-        await event.reply(string_speed, file=path, parse_mode='html')
+        await event.reply(string_speed,file=path,parse_mode='html')
         await speed.delete()
-    except Exception:
+    except Exception as g:
         await speed.delete()
-        await event.reply(string_speed, parse_mode='html')
+        await event.reply(string_speed,parse_mode='html' )
 
 def speed_convert(size, byte=True):
-    if not byte:
-        size = size / 8
+    if not byte: size = size / 8
     power = 2 ** 10
     zero = 0
     units = {0: "B/s", 1: "KB/s", 2: "MB/s", 3: "GB/s", 4: "TB/s"}
