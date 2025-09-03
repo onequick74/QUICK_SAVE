@@ -15,7 +15,7 @@ from telethon.sync import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 from jaat.core.func import screenshot, video_metadata, progress_bar
 from telethon.tl.functions.messages import EditMessageRequest
-from jaattools import fast_upload
+from devgantools import fast_upload
 from concurrent.futures import ThreadPoolExecutor
 import aiohttp 
 from jaat import app
